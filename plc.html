@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบฐานข้อมูลบันทึก PLC - โรงเรียนบ้านโคกม่วย</title>
+    
+    <!-- นำเข้า Tailwind CSS เพื่อการตกแต่งที่สวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- นำเข้าฟอนต์ Prompt จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- นำเข้า Icons จาก Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ตั้งค่าฟอนต์เริ่มต้นเป็น Prompt */
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc; /* พื้นหลังสีเทาอ่อน สบายตา */
+        }
+        
+        /* ตกแต่ง Scrollbar สำหรับตารางแนวนอน */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="antialiased text-slate-800 flex flex-col min-h-screen">
+
+    <!-- ส่วนหัว (Header) สไตล์ Gradient -->
+    <header class="bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-600 text-white pt-12 pb-20 shadow-lg relative overflow-hidden">
+        <!-- ลวดลายพื้นหลังตกแต่ง (วงกลมโปร่งแสง) -->
+        <div class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-white opacity-5 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-60 h-60 bg-blue-400 opacity-10 rounded-full blur-2xl"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row items-center gap-6">
+            <!-- ไอคอนหนังสือ -->
+            <div class="p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 shadow-inner">
+                <i data-lucide="book-open" class="w-12 h-12 text-blue-100"></i>
+            </div>
+            <div class="text-center md:text-left">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2 tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+                    บันทึกชุมชนการเรียนรู้ทางวิชาชีพ (PLC)
+                </h1>
+                <p class="text-blue-100 text-lg font-medium">โรงเรียนบ้านโคกม่วย</p>
+                <p class="text-blue-200 text-sm mt-1">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาหนองบัวลำภู เขต 1</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ส่วนเนื้อหาหลัก (Main Content) -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-14 relative z-20 flex-grow w-full">
+        
+        <!-- แถบค้นหา (Search Box) ลอยทับ Header เพื่อมิติที่สวยงาม -->
+        <div class="bg-white p-2 rounded-2xl shadow-xl flex items-center border border-gray-100 w-full md:w-2/3 lg:w-1/2 mx-auto mb-10 transition-all duration-300 focus-within:shadow-2xl focus-within:ring-4 focus-within:ring-blue-500/20 transform hover:-translate-y-1">
+            <div class="pl-4 pr-2">
+                <i data-lucide="search" class="w-6 h-6 text-blue-500"></i>
+            </div>
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="ค้นหาด้วยปี พ.ศ. (เช่น 2568) หรือคำค้น..." 
+                class="w-full py-4 px-2 outline-none text-lg text-gray-700 bg-transparent placeholder-gray-400"
+            >
+            <button id="clearSearch" class="pr-4 pl-2 text-gray-400 hover:text-red-500 transition-colors hidden">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- กล่องแสดงข้อมูลตาราง (Data Card) -->
+        <div class="bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden">
+            
+            <!-- หัวตารางข้อมูล -->
+            <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center bg-gray-50/50 gap-4">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-3">
+                    <i data-lucide="folder-open" class="w-6 h-6 text-blue-600"></i>
+                    รายการบันทึกทั้งหมด
+                </h2>
+                <div id="resultBadge" class="bg-blue-50 text-blue-700 py-1.5 px-4 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-2 shadow-sm">
+                    พบข้อมูล <span id="resultCount" class="font-bold text-lg">0</span> รายการ
+                </div>
+            </div>
+
+            <!-- ตารางข้อมูล -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="dataTable">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-sm tracking-wide border-b border-gray-200">
+                            <th class="p-5 font-semibold w-48 whitespace-nowrap">วันเดือนปี</th>
+                            <th class="p-5 font-semibold w-32 whitespace-nowrap text-center">ครั้งที่</th>
+                            <th class="p-5 font-semibold">หัวข้อเรื่อง</th>
+                            <th class="p-5 font-semibold text-center w-32 whitespace-nowrap">ดูเอกสาร PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100 text-slate-700 bg-white">
+                        <!-- แถวข้อมูลจะถูกเพิ่มอัตโนมัติด้วย JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- หน้าจอแสดงผลเมื่อไม่พบข้อมูล (Empty State) -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center p-16 text-center animate-pulse">
+                <div class="bg-slate-50 p-6 rounded-full mb-6 inline-block border border-slate-100">
+                    <i data-lucide="file-search" class="w-16 h-16 text-slate-300"></i>
+                </div>
+                <h3 class="text-xl font-medium text-slate-700 mb-2">ไม่พบข้อมูลที่คุณค้นหา</h3>
+                <p class="text-slate-500">ลองเปลี่ยนคำค้นหา หรือตรวจสอบปี พ.ศ. อีกครั้ง</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ส่วนท้าย (Footer) -->
+    <footer class="mt-auto py-6 text-center text-slate-500 text-sm">
+        <p>&copy; <span id="currentYear"></span> โรงเรียนบ้านโคกม่วย. ระบบฐานข้อมูล PLC.</p>
+    </footer>
+
+    <!-- JavaScript สำหรับจัดการการทำงาน -->
+    <script>
+        // 1. กำหนดข้อมูลตั้งต้น
+        const plcData = [
+            {
+                id: 1,
+                date: '1 พฤศจิกายน 2568',
+                session: '12/2568',
+                topic: 'วิเคราะห์สภาพปัญหาและความจำเป็นในการพัฒนานวัตกรรม "เกมตารางเดินทางตามหาตัวอักษร" (Unplugged Coding)',
+                file: '12_2568.pdf',
+                year: '2568'
+            },
+            {
+                id: 2,
+                date: '8 พฤศจิกายน 2568',
+                session: '13/2568',
+                topic: 'ศึกษาแนวคิดและทฤษฎีที่เกี่ยวข้องกับ Unplugged Coding, Computational Thinking และ PLARA Model',
+                file: '13_2568.pdf',
+                year: '2568'
+            },
+            {
+                id: 3,
+                date: '15 พฤศจิกายน 2568',
+                session: '14/2568',
+                topic: 'ออกแบบแผนการจัดประสบการณ์และเครื่องมือวัดประเมินผลร่วมกัน (เกมตารางเดินทางตามหาตัวอักษร)',
+                file: '14_2568.pdf',
+                year: '2568'
+            },
+            {
+                id: 4,
+                date: '22 พฤศจิกายน 2568',
+                session: '15/2568',
+                topic: 'สาธิตและฝึกปฏิบัติการใช้สื่อกิจกรรมเกมตารางเดินทางตามหาตัวอักษร (Model Teaching)',
+                file: '15_2568.pdf',
+                year: '2568'
+            },
+            {
+                id: 5,
+                date: '24 - 28 พฤศจิกายน 2568',
+                session: '16/2568',
+                topic: 'ปฏิบัติการสอนจริงในชั้นเรียน (รอบที่ 1) – นำแผนการจัดประสบการณ์ไปใช้กับ เด็กชั้นอนุบาลปีที่ 2 - 3',
+                file: '16_2568.pdf',
+                year: '2568'
+            }
+        ];
+
+        // 2. อ้างอิง Elements ต่างๆ ในหน้า HTML
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        const tableBody = document.getElementById('tableBody');
+        const dataTable = document.getElementById('dataTable');
+        const emptyState = document.getElementById('emptyState');
+        const resultCount = document.getElementById('resultCount');
+        const resultBadge = document.getElementById('resultBadge');
+
+        // ตั้งค่าปีปัจจุบันใน Footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // 3. ฟังก์ชันสำหรับสร้างแถวข้อมูล (Render Table)
+        function renderTable(data) {
+            tableBody.innerHTML = ''; // ล้างข้อมูลเก่า
+            
+            if (data.length === 0) {
+                // กรณีไม่พบข้อมูล
+                dataTable.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                
+                resultCount.textContent = '0';
+                resultBadge.className = 'bg-red-50 text-red-600 py-1.5 px-4 rounded-full text-sm font-medium border border-red-100 flex items-center gap-2 shadow-sm';
+            } else {
+                // กรณีมีข้อมูล
+                dataTable.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                resultCount.textContent = data.length;
+                resultBadge.className = 'bg-blue-50 text-blue-700 py-1.5 px-4 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-2 shadow-sm';
+                
+                data.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    // เพิ่มคลาสสำหรับ Effect เมื่อนำเมาส์ไปชี้ (Hover)
+                    tr.className = 'hover:bg-blue-50/40 transition-colors duration-200 group';
+                    
+                    tr.innerHTML = `
+                        <td class="p-5 text-sm md:text-base font-medium whitespace-nowrap">
+                            ${item.date}
+                        </td>
+                        <td class="p-5 text-center">
+                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm">
+                                ${item.session}
+                            </span>
+                        </td>
+                        <td class="p-5 text-sm md:text-base">
+                            <a href="${item.file}" target="_blank" class="block group-hover:text-blue-700 transition-colors leading-relaxed" title="คลิกเพื่อดูบันทึก PDF">
+                                ${item.topic}
+                            </a>
+                        </td>
+                        <td class="p-5 text-center">
+                            <a href="${item.file}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-red-100 hover:border-red-500 font-medium text-sm" title="เปิดไฟล์ ${item.file}">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                                <span class="hidden sm:inline">เปิดดู</span>
+                            </a>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+                
+                // รีเฟรชไอคอน Lucide ในส่วนที่เพิ่งสร้างใหม่
+                lucide.createIcons();
+            }
+        }
+
+        // 4. ฟังก์ชันค้นหาและกรองข้อมูล (Search Filter)
+        function handleSearch() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            
+            // แสดง/ซ่อนปุ่มล้างคำค้นหา
+            if (searchTerm.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+
+            // กรองข้อมูล (รองรับการค้นหา ปี, วันที่, ครั้งที่, หรือส่วนหนึ่งของชื่อเรื่อง)
+            const filteredData = plcData.filter(item => {
+                return item.year.includes(searchTerm) || 
+                       item.date.includes(searchTerm) || 
+                       item.session.includes(searchTerm) ||
+                       item.topic.toLowerCase().includes(searchTerm);
+            });
+            
+            renderTable(filteredData);
+        }
+
+        // ดักจับเหตุการณ์การพิมพ์ในช่องค้นหา
+        searchInput.addEventListener('input', handleSearch);
+
+        // ดักจับการคลิกปุ่มล้างคำค้นหา (กากบาท)
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            handleSearch();
+            searchInput.focus(); // ให้เคอร์เซอร์กลับไปที่ช่องค้นหา
+        });
+
+        // 5. โหลดข้อมูลเริ่มต้นและไอคอนเมื่อเปิดหน้าเว็บ
+        renderTable(plcData);
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>
