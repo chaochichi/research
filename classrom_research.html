@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบฐานข้อมูล วิจัยในชั้นเรียน - โรงเรียนบ้านโคกม่วย</title>
+    
+    <!-- เรียกใช้ Tailwind CSS สำหรับจัดการความสวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- เรียกใช้ฟอนต์ภาษาไทย (Kanit) จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- เรียกใช้ไอคอนจาก Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        // กำหนดการตั้งค่าของ Tailwind ให้ใช้ฟอนต์ Kanit
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ซ่อน Scrollbar สำหรับตารางแต่ยังสามารถเลื่อนได้ */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* แอนิเมชันสำหรับ Modal */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms, transform 300ms;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
+
+    <!-- ส่วนหัวเว็บไซต์ (Header) -->
+    <header class="bg-blue-800 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4">
+                <div class="bg-white p-3 rounded-full text-blue-800 shadow-sm">
+                    <i data-lucide="library" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">ระบบฐานข้อมูล วิจัยในชั้นเรียน</h1>
+                    <p class="text-blue-200 mt-1 text-sm md:text-base">โรงเรียนบ้านโคกม่วย สำนักงานเขตพื้นที่การศึกษาประถมศึกษาหนองบัวลำภู เขต 1</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ส่วนเนื้อหาหลัก (Main Content) -->
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <!-- การ์ดครอบตาราง -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
+                    รายการงานวิจัย
+                </h2>
+                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full" id="totalCount">
+                    0 รายการ
+                </span>
+            </div>
+            
+            <!-- ตารางข้อมูล -->
+            <div class="overflow-x-auto hide-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm uppercase tracking-wider border-b border-slate-200">
+                            <th class="px-6 py-4 font-semibold text-center w-16">ลำดับ</th>
+                            <th class="px-6 py-4 font-semibold w-40 whitespace-nowrap">วันเดือนปี</th>
+                            <th class="px-6 py-4 font-semibold min-w-[300px]">ชื่อวิจัย</th>
+                            <th class="px-6 py-4 font-semibold w-48 whitespace-nowrap">ผู้วิจัย</th>
+                            <th class="px-6 py-4 font-semibold text-center w-24">เปิดดู</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100">
+                        <!-- ข้อมูลจะถูกแทรกที่นี่ด้วย JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </main>
+
+    <!-- ส่วนของ Modal สำหรับแสดงข้อมูลรายละเอียด -->
+    <div id="researchModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- พื้นหลังสีดำโปร่งแสง -->
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+
+        <!-- กล่องข้อมูล -->
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl modal-enter">
+                    
+                    <!-- ปุ่มปิด Modal -->
+                    <button onclick="closeModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 focus:outline-none bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i data-lucide="book-open" class="h-6 w-6 text-blue-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full pr-8">
+                                <h3 class="text-xl font-semibold leading-6 text-slate-900 mb-4" id="modalTitle">
+                                    รายละเอียดงานวิจัย
+                                </h3>
+                                
+                                <div class="mt-2 space-y-4">
+                                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        <p class="text-sm font-medium text-slate-500 mb-1">ชื่อเรื่องวิจัย</p>
+                                        <p class="text-base text-slate-800" id="modalResearchTitle">-</p>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                            <p class="text-sm font-medium text-slate-500 mb-1 flex items-center gap-1">
+                                                <i data-lucide="calendar" class="w-4 h-4"></i> วันเดือนปี
+                                            </p>
+                                            <p class="text-base text-slate-800 font-medium" id="modalDate">-</p>
+                                        </div>
+                                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                            <p class="text-sm font-medium text-slate-500 mb-1 flex items-center gap-1">
+                                                <i data-lucide="user" class="w-4 h-4"></i> ผู้วิจัย
+                                            </p>
+                                            <p class="text-base text-slate-800 font-medium" id="modalResearcher">-</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                        <p class="text-sm font-medium text-blue-800 mb-1 flex items-center gap-1">
+                                            <i data-lucide="file-down" class="w-4 h-4"></i> ชื่อไฟล์เอกสาร
+                                        </p>
+                                        <p class="text-base text-blue-900 font-mono text-sm" id="modalFilename">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-200">
+                        <a id="modalPdfBtn" href="#" target="_blank" class="inline-flex w-full justify-center items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:ml-3 sm:w-auto transition-colors">
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                            เปิดอ่านเอกสาร (PDF)
+                        </a>
+                        <button type="button" onclick="closeModal()" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">
+                            ปิดหน้าต่าง
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลวิจัย (Array of Objects)
+        const researchData = [
+            {
+                id: 1,
+                date: "3 พฤศจิกายน 2568",
+                title: "การพัฒนาทักษะพื้นฐานด้านการอ่านและแนวคิดเชิงคำนวณของเด็กปฐมวัยโดยใช้เกมตารางเดินทางตามหาตัวอักษร",
+                researcher: "นางรุ่งฤดี บุญเกิด",
+                filename: "ClassroomResearch_01_2568.pdf"
+            },
+            {
+                id: 2,
+                date: "3 พฤศจิกายน 2568",
+                title: "การพัฒนาทักษะการอ่านของนักเรียนชั้นประถมศึกษาปีที่ 1 โดยใช้แนวการสอนแบบบันไดสี่ขั้น",
+                researcher: "นางวิภาพร ธรรมวิเศษ",
+                filename: "ClassroomResearch_02_2568.pdf"
+            },
+            {
+                id: 3,
+                date: "25 พฤษภาคม 2569",
+                title: "การพัฒนาผลสัมฤทธิ์ทางการเรียนวิชาภาษาไทย เรื่อง คำเป็นและคำตาย ของนักเรียนชั้นประถมศึกษาปีที่ 4 โดยใช้รูปแบบการสอนแบบ 5 Steps",
+                researcher: "นางวิภาพร ธรรมวิเศษ",
+                filename: "ClassroomResearch_01_2569.pdf"
+            },
+            {
+                id: 4,
+                date: "28 พฤษภาคม 2569",
+                title: "การพัฒนาผลสัมฤทธิ์ทางการเรียนวิชาภาษาไทย เรื่อง การพัฒนาทักษะการเรียนรู้และทักษะอาชีพของนักเรียนชั้นประถมศึกษาปีที่ 1 ผ่านการจัดการเรียนรู้แบบลงมือปฏิบัติ เรื่อง “ปลูกผักสวนครัว : มะละกอ” เพื่อพัฒนาทักษะชีวิตและน้อมนำหลักปรัชญาของเศรษฐกิจพอเพียง (Soft Power)",
+                researcher: "นางสาวรัตนา โคตรวิทย์",
+                filename: "ClassroomResearch_02_2569.pdf"
+            }
+        ];
+
+        // ฟังก์ชันสร้างแถวในตาราง
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            document.getElementById('totalCount').innerText = `${researchData.length} รายการ`;
+            tbody.innerHTML = ''; // ล้างข้อมูลเก่า
+
+            researchData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50/50 transition-colors group cursor-pointer";
+                // ทำให้คลิกที่แถวแล้วเปิดข้อมูลได้เลย
+                tr.onclick = (e) => {
+                    // ป้องกันไม่ให้คลิกปุ่มเปิดดูซ้ำซ้อนกับคลิกที่แถว
+                    if (!e.target.closest('button')) {
+                        openModal(item.id);
+                    }
+                };
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-center text-slate-500 font-medium">
+                        ${index + 1}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-600 text-sm">
+                        ${item.date}
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-blue-700 font-medium group-hover:text-blue-800 transition-colors line-clamp-2 md:line-clamp-none">
+                            ${item.title}
+                        </p>
+                    </td>
+                    <td class="px-6 py-4 text-slate-700 whitespace-nowrap">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600 font-bold">
+                                ${item.researcher.charAt(0)}
+                            </div>
+                            ${item.researcher}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="openModal(${item.id})" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors" title="ดูรายละเอียด">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // สร้างไอคอนของ Lucide ใหม่สำหรับอิลิเมนต์ที่ถูกเพิ่มเข้ามาแบบไดนามิก
+            lucide.createIcons();
+        }
+
+        // ตัวแปรเก็บสถานะ Modal
+        const modal = document.getElementById('researchModal');
+        const modalPanel = document.getElementById('modalPanel');
+
+        // ฟังก์ชันเปิด Modal พร้อมใส่ข้อมูล
+        function openModal(id) {
+            const data = researchData.find(r => r.id === id);
+            if (!data) return;
+
+            // ใส่ข้อมูลลงใน Modal
+            document.getElementById('modalResearchTitle').innerText = data.title;
+            document.getElementById('modalDate').innerText = data.date;
+            document.getElementById('modalResearcher').innerText = data.researcher;
+            document.getElementById('modalFilename').innerText = data.filename;
+            
+            // ตั้งค่าลิงก์ปุ่มไปยังไฟล์ PDF (ในกรณีใช้งานจริงไฟล์ต้องอยู่ในโฟลเดอร์เดียวกับ HTML หรือกำหนด Path ให้ถูกต้อง)
+            document.getElementById('modalPdfBtn').href = data.filename;
+
+            // แสดง Modal
+            modal.classList.remove('hidden');
+            
+            // แอนิเมชันตอนเปิด
+            setTimeout(() => {
+                modalPanel.classList.add('modal-enter-active');
+                modalPanel.classList.remove('modal-enter');
+            }, 10);
+        }
+
+        // ฟังก์ชันปิด Modal
+        function closeModal() {
+            // แอนิเมชันตอนปิด
+            modalPanel.classList.remove('modal-enter-active');
+            modalPanel.classList.add('modal-enter');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // รอให้แอนิเมชันเสร็จก่อนแล้วค่อยซ่อน
+        }
+
+        // ปิด Modal เมื่อกดปุ่ม ESC
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // เริ่มต้นการทำงานเมื่อโหลดหน้าเว็บ
+        window.onload = () => {
+            renderTable();
+            lucide.createIcons(); // โหลดไอคอน
+        };
+    </script>
+</body>
+</html>
