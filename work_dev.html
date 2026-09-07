@@ -115,7 +115,7 @@
                 department: 'ผู้บริหารสถานศึกษา',
                 avatar: 'director_chao.png',
                 documents: [
-                    { year: '2569', idPlan: '#', pa: 'https://sites.google.com/view/classroomkruchao/performance-agreement-pa/pa-2569' }
+                    { year: '2569', idPlan: 'ID Plan Chaowanan 2569.pdf', pa: 'https://sites.google.com/view/classroomkruchao/performance-agreement-pa/pa-2569' }
                 ]
             },
             {
@@ -125,7 +125,7 @@
                 department: 'กลุ่มสาระการเรียนรู้คณิตศาสตร์',
                 avatar: 'kru_nuch.png',
                 documents: [
-                    { year: '2569', idPlan: '#', pa: 'https://chaochichi.github.io/pa/pa_rattana.html' }
+                    { year: '2569', idPlan: null, pa: 'https://chaochichi.github.io/pa/pa_rattana.html' }
                 ]
             },
             {
@@ -135,7 +135,7 @@
                 department: 'กลุ่มสาระการเรียนรู้วิทยาศาสตร์และเทคโนโลยี',
                 avatar: 'kru_koa.png',
                 documents: [
-                    { year: '2569', idPlan: '#', pa: 'https://chaochichi.github.io/pa/teacher_pa_runruedee_2569.html' }
+                    { year: '2569', idPlan: 'ID Plan Rungruedee 2569.pdf', pa: 'https://chaochichi.github.io/pa/teacher_pa_runruedee_2569.html' }
                 ]
             },
             {
@@ -145,7 +145,7 @@
                 department: 'กลุ่มสาระการเรียนรู้สังคมศึกษา ศาสนา และวัฒนธรรม',
                 avatar: 'kru_boong.png',
                 documents: [
-                    { year: '2569', idPlan: '#', pa: 'https://chaochichi.github.io/pa/pa_wipaporn.html' }
+                    { year: '2569', idPlan: null, pa: 'https://chaochichi.github.io/pa/pa_wipaporn.html' }
                 ]
             },
             {
@@ -155,7 +155,7 @@
                 department: 'กลุ่มสาระการเรียนรู้ภาษาไทย',
                 avatar: 'kru_fon.png',
                 documents: [
-                    { year: '2569', idPlan: '#', pa: null } // ไม่มี PA
+                    { year: '2569', idPlan: 'ID Plan Fonn 2569.pdf', pa: null } // ไม่มี PA
                 ]
             }
         ];
@@ -314,23 +314,41 @@
             let docsHTML = '';
             if (currentDocs) {
                 // ID Plan HTML
-                docsHTML += `
-                    <a href="${currentDocs.idPlan}" target="_blank" rel="noopener noreferrer" class="block group h-full">
-                        <div class="h-full bg-gradient-to-br from-sky-50 to-white border border-sky-100 rounded-3xl p-6 sm:p-8 card-hover flex flex-col justify-between relative overflow-hidden">
-                            <div class="absolute -right-6 -top-6 w-32 h-32 bg-sky-100 rounded-full blur-2xl opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
-                            <div class="relative z-10">
-                                <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
+                if (currentDocs.idPlan && currentDocs.idPlan !== '#') {
+                    docsHTML += `
+                        <a href="${currentDocs.idPlan}" target="_blank" rel="noopener noreferrer" class="block group h-full">
+                            <div class="h-full bg-gradient-to-br from-sky-50 to-white border border-sky-100 rounded-3xl p-6 sm:p-8 card-hover flex flex-col justify-between relative overflow-hidden">
+                                <div class="absolute -right-6 -top-6 w-32 h-32 bg-sky-100 rounded-full blur-2xl opacity-50 group-hover:scale-150 transition-transform duration-700"></div>
+                                <div class="relative z-10">
+                                    <div class="w-14 h-14 bg-sky-100 text-sky-600 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
+                                        <i data-lucide="book-open" class="w-7 h-7"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-slate-800 mb-2">ID Plan</h4>
+                                    <p class="text-sm text-slate-500 leading-relaxed">แผนพัฒนาตนเองรายบุคคล<br>ประจำปีการศึกษา ${currentDocs.year}</p>
+                                </div>
+                                <div class="mt-8 pt-4 border-t border-sky-100 text-sky-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform relative z-10">
+                                    เปิดดูเอกสาร <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                } else {
+                    docsHTML += `
+                        <div class="h-full bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute inset-0 bg-stripes opacity-10"></div>
+                            <div class="relative z-10 opacity-75">
+                                <div class="w-14 h-14 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center mb-5">
                                     <i data-lucide="book-open" class="w-7 h-7"></i>
                                 </div>
-                                <h4 class="text-xl font-bold text-slate-800 mb-2">ID Plan</h4>
-                                <p class="text-sm text-slate-500 leading-relaxed">แผนพัฒนาตนเองรายบุคคล<br>ประจำปีการศึกษา ${currentDocs.year}</p>
+                                <h4 class="text-xl font-bold text-slate-600 mb-2">ID Plan</h4>
+                                <p class="text-sm text-slate-400">แผนพัฒนาตนเองรายบุคคล<br>ประจำปีการศึกษา ${currentDocs.year}</p>
                             </div>
-                            <div class="mt-8 pt-4 border-t border-sky-100 text-sky-600 text-sm font-bold flex items-center group-hover:translate-x-2 transition-transform relative z-10">
-                                เปิดดูเอกสาร <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                            <div class="mt-8 relative z-10 text-sm text-slate-500 font-medium bg-slate-200/60 py-3 px-4 rounded-xl text-center border border-slate-300">
+                                <i data-lucide="clock" class="w-4 h-4 inline-block mr-1 -mt-0.5"></i> รอดำเนินการจัดทำเอกสาร
                             </div>
                         </div>
-                    </a>
-                `;
+                    `;
+                }
 
                 // PA HTML
                 if (teacher.position === 'พนักงานราชการ' && !currentDocs.pa) {
